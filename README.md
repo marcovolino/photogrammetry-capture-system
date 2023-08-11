@@ -1,6 +1,6 @@
 # Photogrammetry Capture System
 
-## Introduction
+## Overview
 This repository contains a set of documents that outline the developement of a 64-camera photogrammetry system for the capture of human subjects.
 
 **Please see the [project website](https://marcovolino.github.io/photogrammetry-capture-system/) for full details.**
