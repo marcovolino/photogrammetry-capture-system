@@ -22,4 +22,4 @@ The system control software uses [libgphoto2](http://gphoto.org/) making it agno
 
 
 
-###[Next Page - Camera Synchronisation](camera-sync.md)
+### [Next Page - Camera Synchronisation](camera-sync.md)
