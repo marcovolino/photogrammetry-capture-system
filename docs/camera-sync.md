@@ -1,4 +1,4 @@
-# Cameras and Synchronisation
+# Camera Synchronisation
 
 Photogrammetry systems for capturing people require a huge
 
