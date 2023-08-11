@@ -1,3 +1,6 @@
+---
+layout: page
+---
 # Camera Synchronisation
 
 Photogrammetry systems for capturing people require a huge
