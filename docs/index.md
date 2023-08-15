@@ -2,8 +2,7 @@
 layout: page
 ---
 
-# Overview
-This site provides an overview of a 64-camera photogrammetry capture system, shown in Figure 1, that was built at the Universty of Surrey's [Centre for Vision, Speech and Signal Processing](https://www.surrey.ac.uk/cvssp). 
+This site provides an overview of a 64-camera photogrammetry capture system, shown in Figure 1, that was built at the Universty of Surrey's [Centre for Vision, Speech and Signal Processing](https://www.surrey.ac.uk/cvssp) by [Marco Volino](https://marcovolino.github.io/).
 
 ![photogrammetry system](images/photogrammetry.jpg)
 <p style="text-align:center"><b>Figure 1:</b> Photogrammetry System</p>
