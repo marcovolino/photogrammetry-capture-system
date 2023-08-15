@@ -4,7 +4,6 @@ theme: minima
 
 header_pages:
  - system-overview.md
- - camera-control.md
  - camera-sync.md
+ - camera-control.md
  - system-setup.md
-
