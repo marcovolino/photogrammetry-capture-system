@@ -3,7 +3,8 @@ title: Photogrammetry Capture System
 theme: minima
 
 header_pages:
- - overview.md
+ - system-overview.md
  - camera-control.md
  - camera-sync.md
+ - system-setup.md
 
