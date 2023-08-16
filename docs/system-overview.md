@@ -1,8 +1,7 @@
 ---
 layout: page
+title: System Overview
 ---
-
-# System Overview
 
 This page gives a high-level overview of the system design, shown in Figure 1.
 
