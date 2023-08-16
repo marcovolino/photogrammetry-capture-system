@@ -58,4 +58,4 @@ Each PCB was then constructued using the componoents, listed previously
 
 [TODO - DESCRIBE SYNC TESTS]
 
-![](images/sync-test.pdf)
+![](images/sync-test.png)
