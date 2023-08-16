@@ -1,0 +1,33 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model CNY74-2H
+#/185220/57286/2.29/8/4/Transistor
+DEF CNY74-2H Q 0 30 Y Y 1 F N
+F0 "Q" 850 300 50 H V L CNN
+F1 "CNY74-2H" 850 200 50 H V L CNN
+F2 "DIP762W56P254L977H470Q8N" 850 100 50 H I L CNN
+F3 "https://componentsearchengine.com/Datasheets/2/CNY74-2H.pdf" 850 0 50 H I L CNN
+F4 "Optocoupler Transistor O/P 2-ch PDIP8" 850 -100 50 H I L CNN "Description"
+F5 "4.7" 850 -200 50 H I L CNN "Height"
+F6 "Vishay" 850 -300 50 H I L CNN "Manufacturer_Name"
+F7 "CNY74-2H" 850 -400 50 H I L CNN "Manufacturer_Part_Number"
+F8 "1451761" 850 -500 50 H I L CNN "RS Part Number"
+F9 "http://uk.rs-online.com/web/p/products/1451761" 850 -600 50 H I L CNN "RS Price/Stock"
+F10 "70026409" 850 -700 50 H I L CNN "Allied_Number"
+F11 "https://www.alliedelec.com/siliconix-vishay-cny74-2h/70026409/" 850 -800 50 H I L CNN "Allied Price/Stock"
+F12 "CNY74-2H" 850 -900 50 H I L CNN "Arrow Part Number"
+F13 "https://www.arrow.com/en/products/cny74-2h/vishay" 850 -1000 50 H I L CNN "Arrow Price/Stock"
+DRAW
+X A_1 1 0 0 200 R 50 50 0 0 B
+X C_1 2 0 -100 200 R 50 50 0 0 B
+X C_2 3 0 -200 200 R 50 50 0 0 B
+X A_2 4 0 -300 200 R 50 50 0 0 B
+X E_2 8 1000 0 200 L 50 50 0 0 B
+X C_4 7 1000 -100 200 L 50 50 0 0 B
+X C_3 6 1000 -200 200 L 50 50 0 0 B
+X E_1 5 1000 -300 200 L 50 50 0 0 B
+P 5 0 1 6 200 100 800 100 800 -400 200 -400 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library

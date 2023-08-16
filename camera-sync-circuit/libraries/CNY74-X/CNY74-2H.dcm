@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP CNY74-2H
+D Optocoupler Transistor O/P 2-ch PDIP8
+K
+F https://componentsearchengine.com/Datasheets/2/CNY74-2H.pdf
+$ENDCMP
+#
+#End Doc Library
