@@ -20,8 +20,8 @@ As a starting point, software based triggering via the USB was tested and found 
 
 The following components were identified as suitable 
 
-| Component         		| Quantity per PCB | Link |
-| -----------       		| -------- 	        | -----------   | 
+| Component | Quantity per PCB | Link |
+| ----------- | -------- | ----------- | 
 | Diode (1N4148)	| 8 |[RS Components](https://uk.rs-online.com/web/p/switching-diodes/8431562) |
 | DIP Switch (SPST)| 1 |[RS Components](https://uk.rs-online.com/web/p/dip-sip-switches/8772154) |
 | GPIO Connector| 1|[RS Components](https://uk.rs-online.com/web/p/pcb-sockets/1731086) |
@@ -56,5 +56,6 @@ Each PCB was then constructued using the componoents, listed previously
 
 ## Synchronisation Tests
 
-[TODO]
+[TODO - DESCRIBE SYNC TESTS]
 
+![](images/sync-test.pdf)
