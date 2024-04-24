@@ -1,4 +1,8 @@
 
+/.vs
+*.xcworkspace
+*.sln
+
 /docs/_site/
 /docs/.jekyll-cache/
 .DS_Store
