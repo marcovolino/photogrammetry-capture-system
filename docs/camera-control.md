@@ -2,14 +2,5 @@
 layout: page
 title: Camera Control
 ---
-# Camera Control Software
 
-
-
-
-
-
-
-
-
-
+[TODO] This page will outline the software systems that control the camera system
