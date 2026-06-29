@@ -3,11 +3,11 @@ layout: page
 title: Floor Chart
 ---
 
-The processing pipeline utilises photogrammetry which will reconstruct the subject in an arbitary coordinate system (normally with the origin on one of the cameras in the solve) and at an arbitary scale. 
-In order to recover metrically accurate scale and a useful origin (translation and orientation) a 
+The reconstruction pipeline estimates camera and subject geometry in an arbitrary coordinate system, usually with the origin attached to one of the solved cameras. It also reconstructs at an arbitrary scale. A floor chart provides known geometry in the capture volume so the final model can be aligned, oriented, and scaled in metric units.
 
+The chart is based on the <a href="https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html" target="_blank">ArUco</a> library that ships as part of <a href="https://opencv.org/" target="_blank">OpenCV</a>.
 
-This was based on the <a href="https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html" target="_blank">ArUco</a> library that ships as part of <a href="https://opencv.org/" target="_blank">OpenCV</a>.
+## Board Generation
 
 ```
 example_aruco_create_board 
@@ -23,9 +23,8 @@ The following parameters control the creation of the board:
 - s - Separation between two consecutive markers in the grid (in pixels)
 - m - Margins size (in pixels)
 
-
 ![](images/board_layout.png)
-<p style="text-align: center;"><b>Figure 1: Floor chart</b></p>
+<p style="text-align: center;"><b>Figure 1:</b> ArUco board layout.</p>
 
 Given the parameters that control the drawing of the board and known structure, it is possible to formulate the width and height of the board in pixels as follows:
 
@@ -67,9 +66,9 @@ The computed parameters can therefore be used to generate an A0 sized ArUco boar
 ./example_aruco_create_board -d=1 -w=9 -h=7 -m=0 -l=900 -s=585 floor-chart_7x5_a0.png
 ```
 
-The generated image was then edited to remove the central portion of markers, and replaced with foot prints and arrows to represent the X-Z plane.  
+The generated image was then edited to remove the central portion of markers and replace it with footprints and arrows representing the X-Z plane. This gives the subject a clear standing position while preserving known fiducial markers around the capture area.
 
-The image below shows the final floor chart after editing 
+The image below shows the final floor chart after editing.
 
 ![](images/floor_chart.png)
-<p style="text-align: center;"><b>Figure 1: Floor chart</b></p>
+<p style="text-align: center;"><b>Figure 2:</b> Final floor chart.</p>
