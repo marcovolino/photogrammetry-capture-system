@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Camera Synchronisation
+title:  Synchronisation
 ---
 
 Photogrammetry systems designed to capture human subjects require precise shutter synchronisation so that all images represent the same instant. Even small timing differences can create reconstruction errors when the subject moves between frames.
