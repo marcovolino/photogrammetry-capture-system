@@ -12,9 +12,13 @@ This page highlights example outputs and validation images from the capture syst
 
 The captured images have been processed using RealityCapture 2.2 and are shown below.
 
-The viewer below shows a textured OBJ result generated from the capture system. Drag to orbit the model, scroll or pinch to zoom, and tap or double-click the scan to focus the camera on that point.
+The viewer below shows a textured OBJ result generated from the capture system. Drag to orbit the model, scroll or pinch to zoom, and tap or double-click the scan to focus the camera on that point. The viewer starts with the 4K texture for faster loading, with the 8K texture available from the resolution selector.
 
 <div class="result-viewer" data-result-viewer>
+  <div class="result-viewer__frame">
+    <canvas class="result-viewer__canvas" aria-label="Interactive 3D preview of a photogrammetry reconstruction"></canvas>
+    <p class="result-viewer__fallback" data-viewer-fallback></p>
+  </div>
   <div class="result-viewer__toolbar">
     <div class="result-viewer__groups">
       <div class="result-viewer__button-group" role="group" aria-label="Viewing mode">
@@ -22,11 +26,14 @@ The viewer below shows a textured OBJ result generated from the capture system. 
         <button class="result-viewer__button" type="button" data-view-mode="shaded" aria-pressed="false">Shaded geometry</button>
         <button class="result-viewer__button" type="button" data-view-mode="wireframe" aria-pressed="false">Wireframe</button>
       </div>
+      <div class="result-viewer__button-group" role="group" aria-label="Texture resolution">
+        <button class="result-viewer__button result-viewer__button--active" type="button" data-texture-resolution="4k" aria-pressed="true">4K texture</button>
+        <button class="result-viewer__button" type="button" data-texture-resolution="8k" aria-pressed="false">8K texture</button>
+      </div>
     </div>
-    <button class="result-viewer__button" type="button" data-reset-view>Reset view</button>
-  </div>
-  <div class="result-viewer__frame">
-    <canvas class="result-viewer__canvas" aria-label="Interactive 3D preview of a photogrammetry reconstruction"></canvas>
-    <p class="result-viewer__fallback" data-viewer-fallback></p>
+    <div class="result-viewer__button-group result-viewer__button-group--actions" role="group" aria-label="Viewer actions">
+      <button class="result-viewer__button" type="button" data-fullscreen-view aria-pressed="false">Fullscreen</button>
+      <button class="result-viewer__button" type="button" data-reset-view>Reset view</button>
+    </div>
   </div>
 </div>

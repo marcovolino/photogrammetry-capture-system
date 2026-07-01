@@ -1,7 +1,11 @@
 import * as THREE from "../vendor/three.module.min.js";
 
 const MODEL_URL = new URL("../model/model.obj", import.meta.url);
-const TEXTURE_URL = new URL("../model/model.jpg", import.meta.url);
+const DEFAULT_TEXTURE_RESOLUTION = "4k";
+const TEXTURE_URLS = {
+  "4k": new URL("../model/model_4k.jpg", import.meta.url),
+  "8k": new URL("../model/model_8k.jpg", import.meta.url),
+};
 const DEFAULT_TARGET = new THREE.Vector3(0, 1.4, 0);
 const DEFAULT_CAMERA_DISTANCE = 5.7;
 const MIN_CAMERA_DISTANCE = 0.85;
@@ -14,7 +18,9 @@ const container = document.querySelector("[data-result-viewer]");
 if (container) {
   const canvas = container.querySelector("canvas");
   const resetButton = container.querySelector("[data-reset-view]");
+  const fullscreenButton = container.querySelector("[data-fullscreen-view]");
   const modeButtons = Array.from(container.querySelectorAll("[data-view-mode]"));
+  const textureButtons = Array.from(container.querySelectorAll("[data-texture-resolution]"));
   const fallback = container.querySelector("[data-viewer-fallback]");
   const frame = container.querySelector(".result-viewer__frame");
 
@@ -44,6 +50,7 @@ if (container) {
       lastY: 0,
       autoRotate: true,
       viewMode: "texture",
+      textureResolution: DEFAULT_TEXTURE_RESOLUTION,
     };
 
     let loadedMesh = null;
@@ -51,6 +58,7 @@ if (container) {
     let lastPinchDistance = 0;
     let multiTouchActive = false;
     const activePointers = new Map();
+    const textureCache = new Map();
 
     const model = new THREE.Group();
     scene.add(model);
@@ -78,12 +86,15 @@ if (container) {
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.42));
 
-    loadTexturedObj(MODEL_URL, TEXTURE_URL).then((loadedModel) => {
+    loadTexturedObj(MODEL_URL, loadCachedTexture(DEFAULT_TEXTURE_RESOLUTION, textureCache)).then((loadedModel) => {
       model.clear();
       model.add(loadedModel.group);
       loadedMesh = loadedModel.mesh;
       loadedMaterials = loadedModel.materials;
       applyViewMode(state.viewMode, loadedMesh, loadedMaterials);
+      if (state.textureResolution !== DEFAULT_TEXTURE_RESOLUTION) {
+        applyTextureResolution(state.textureResolution);
+      }
       frame?.classList.add("result-viewer__frame--loaded");
     }).catch((error) => {
       container.classList.add("result-viewer--error");
@@ -208,6 +219,18 @@ if (container) {
       frame?.classList.remove("result-viewer__frame--focused");
     });
 
+    fullscreenButton?.addEventListener("click", () => {
+      toggleFullscreen(container, fullscreenButton, resize);
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      updateFullscreenState(container, fullscreenButton, resize);
+    });
+
+    document.addEventListener("webkitfullscreenchange", () => {
+      updateFullscreenState(container, fullscreenButton, resize);
+    });
+
     modeButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const mode = button.dataset.viewMode;
@@ -219,7 +242,14 @@ if (container) {
       });
     });
 
+    textureButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        applyTextureResolution(button.dataset.textureResolution);
+      });
+    });
+
     setActiveButtons(modeButtons, state.viewMode, "viewMode");
+    setActiveButtons(textureButtons, state.textureResolution, "textureResolution");
 
     resize();
     renderer.setAnimationLoop(render);
@@ -259,6 +289,30 @@ if (container) {
       }
       return false;
     }
+
+    async function applyTextureResolution(resolution) {
+      if (!TEXTURE_URLS[resolution]) {
+        return;
+      }
+
+      setButtonsDisabled(textureButtons, true);
+      try {
+        const texture = await loadCachedTexture(resolution, textureCache);
+        state.textureResolution = resolution;
+        if (loadedMaterials) {
+          loadedMaterials.texture.map = texture;
+          loadedMaterials.texture.needsUpdate = true;
+        }
+        if (loadedMesh && loadedMaterials) {
+          applyViewMode(state.viewMode, loadedMesh, loadedMaterials);
+        }
+        setActiveButtons(textureButtons, state.textureResolution, "textureResolution");
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setButtonsDisabled(textureButtons, false);
+      }
+    }
   } catch (error) {
     container.classList.add("result-viewer--error");
     if (fallback) {
@@ -268,10 +322,10 @@ if (container) {
   }
 }
 
-async function loadTexturedObj(objUrl, textureUrl) {
+async function loadTexturedObj(objUrl, texturePromise) {
   const [objText, texture] = await Promise.all([
     fetchText(objUrl),
-    loadTexture(textureUrl),
+    texturePromise,
   ]);
   const geometry = parseObjGeometry(objText);
 
@@ -320,6 +374,13 @@ function setActiveButtons(buttons, value, dataKey) {
   });
 }
 
+function setButtonsDisabled(buttons, disabled) {
+  buttons.forEach((button) => {
+    button.disabled = disabled;
+    button.setAttribute("aria-busy", String(disabled));
+  });
+}
+
 function pickModelPoint(clientX, clientY, canvas, camera, mesh, raycaster, pointer) {
   const rect = canvas.getBoundingClientRect();
   pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -334,6 +395,53 @@ function pickTargetPlanePoint(camera, target, raycaster) {
   const normal = camera.getWorldDirection(new THREE.Vector3());
   const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, target);
   return raycaster.ray.intersectPlane(plane, new THREE.Vector3());
+}
+
+function getFullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
+async function toggleFullscreen(element, button, resize) {
+  if (getFullscreenElement() === element || element.classList.contains("result-viewer--fullscreen")) {
+    await exitFullscreen(element);
+  } else {
+    try {
+      await enterFullscreen(element);
+    } catch {
+      element.classList.add("result-viewer--fullscreen");
+    }
+  }
+  updateFullscreenState(element, button, resize);
+}
+
+async function enterFullscreen(element) {
+  if (element.requestFullscreen) {
+    await element.requestFullscreen();
+  } else if (element.webkitRequestFullscreen) {
+    element.webkitRequestFullscreen();
+  } else {
+    element.classList.add("result-viewer--fullscreen");
+  }
+}
+
+async function exitFullscreen(element) {
+  if (document.exitFullscreen && document.fullscreenElement) {
+    await document.exitFullscreen();
+  } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) {
+    document.webkitExitFullscreen();
+  } else {
+    element.classList.remove("result-viewer--fullscreen");
+  }
+}
+
+function updateFullscreenState(element, button, resize) {
+  const isFullscreen = getFullscreenElement() === element || element.classList.contains("result-viewer--fullscreen");
+  document.body.classList.toggle("result-viewer-fullscreen-open", isFullscreen);
+  if (button) {
+    button.textContent = isFullscreen ? "Exit fullscreen" : "Fullscreen";
+    button.setAttribute("aria-pressed", String(isFullscreen));
+  }
+  requestAnimationFrame(resize);
 }
 
 function getPointerDistance(pointers) {
@@ -382,6 +490,21 @@ function loadTexture(url) {
       reject,
     );
   });
+}
+
+function loadCachedTexture(resolution, cache) {
+  const textureUrl = TEXTURE_URLS[resolution];
+  if (!textureUrl) {
+    return Promise.reject(new Error(`Unknown texture resolution: ${resolution}`));
+  }
+  if (!cache.has(resolution)) {
+    const texturePromise = loadTexture(textureUrl).catch((error) => {
+      cache.delete(resolution);
+      throw error;
+    });
+    cache.set(resolution, texturePromise);
+  }
+  return cache.get(resolution);
 }
 
 function parseObjGeometry(objText) {
