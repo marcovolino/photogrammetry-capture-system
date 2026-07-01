@@ -7,6 +7,7 @@ const DEFAULT_CAMERA_DISTANCE = 5.7;
 const MIN_CAMERA_DISTANCE = 0.85;
 const MAX_CAMERA_DISTANCE = 9;
 const ZOOM_SPEED = 0.0012;
+const TAP_MOVE_LIMIT = 12;
 
 const container = document.querySelector("[data-result-viewer]");
 
@@ -39,7 +40,6 @@ if (container) {
       azimuth: -0.45,
       elevation: 0.28,
       distance: DEFAULT_CAMERA_DISTANCE,
-      pointerDown: false,
       lastX: 0,
       lastY: 0,
       autoRotate: true,
@@ -48,6 +48,9 @@ if (container) {
 
     let loadedMesh = null;
     let loadedMaterials = null;
+    let lastPinchDistance = 0;
+    let multiTouchActive = false;
+    const activePointers = new Map();
 
     const model = new THREE.Group();
     scene.add(model);
@@ -94,20 +97,50 @@ if (container) {
     resizeObserver.observe(container);
 
     canvas.addEventListener("pointerdown", (event) => {
-      state.pointerDown = true;
+      event.preventDefault();
       state.autoRotate = false;
+      activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+        startX: event.clientX,
+        startY: event.clientY,
+      });
       state.lastX = event.clientX;
       state.lastY = event.clientY;
-      canvas.setPointerCapture(event.pointerId);
+      safelySetPointerCapture(canvas, event.pointerId);
+      if (activePointers.size === 2) {
+        multiTouchActive = true;
+        lastPinchDistance = getPointerDistance(activePointers);
+      }
     });
 
     canvas.addEventListener("pointermove", (event) => {
-      if (!state.pointerDown) {
+      const activePointer = activePointers.get(event.pointerId);
+      if (!activePointer) {
         return;
       }
 
-      const dx = event.clientX - state.lastX;
-      const dy = event.clientY - state.lastY;
+      event.preventDefault();
+      const previousX = activePointer.x;
+      const previousY = activePointer.y;
+      activePointer.x = event.clientX;
+      activePointer.y = event.clientY;
+
+      if (activePointers.size >= 2) {
+        const pinchDistance = getPointerDistance(activePointers);
+        if (lastPinchDistance > 0 && pinchDistance > 0) {
+          state.distance = clamp(
+            state.distance * (lastPinchDistance / pinchDistance),
+            MIN_CAMERA_DISTANCE,
+            MAX_CAMERA_DISTANCE,
+          );
+        }
+        lastPinchDistance = pinchDistance;
+        return;
+      }
+
+      const dx = event.clientX - previousX;
+      const dy = event.clientY - previousY;
       state.azimuth -= dx * 0.008;
       state.elevation = clamp(state.elevation + dy * 0.006, -0.65, 0.95);
       state.lastX = event.clientX;
@@ -115,8 +148,40 @@ if (container) {
     });
 
     canvas.addEventListener("pointerup", (event) => {
-      state.pointerDown = false;
-      canvas.releasePointerCapture(event.pointerId);
+      const activePointer = activePointers.get(event.pointerId);
+      const wasSingleTouchTap = event.pointerType !== "mouse"
+        && activePointers.size === 1
+        && activePointer
+        && !multiTouchActive
+        && getMoveDistance(activePointer, event.clientX, event.clientY) <= TAP_MOVE_LIMIT;
+
+      activePointers.delete(event.pointerId);
+      safelyReleasePointerCapture(canvas, event.pointerId);
+      if (activePointers.size < 2) {
+        lastPinchDistance = 0;
+      }
+      if (activePointers.size === 0) {
+        multiTouchActive = false;
+      }
+      if (activePointers.size === 1) {
+        const [remainingPointer] = activePointers.values();
+        state.lastX = remainingPointer.x;
+        state.lastY = remainingPointer.y;
+      }
+      if (wasSingleTouchTap) {
+        focusAtClientPoint(event.clientX, event.clientY);
+      }
+    });
+
+    canvas.addEventListener("pointercancel", (event) => {
+      activePointers.delete(event.pointerId);
+      safelyReleasePointerCapture(canvas, event.pointerId);
+      if (activePointers.size < 2) {
+        lastPinchDistance = 0;
+      }
+      if (activePointers.size === 0) {
+        multiTouchActive = false;
+      }
     });
 
     canvas.addEventListener("wheel", (event) => {
@@ -131,16 +196,7 @@ if (container) {
     }, { passive: false });
 
     canvas.addEventListener("dblclick", (event) => {
-      if (!loadedMesh) {
-        return;
-      }
-
-      const focusedPoint = pickModelPoint(event, canvas, camera, loadedMesh, raycaster, pointer);
-      if (focusedPoint) {
-        target.copy(focusedPoint);
-        state.autoRotate = false;
-        frame?.classList.add("result-viewer__frame--focused");
-      }
+      focusAtClientPoint(event.clientX, event.clientY);
     });
 
     resetButton?.addEventListener("click", () => {
@@ -186,6 +242,22 @@ if (container) {
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+    }
+
+    function focusAtClientPoint(clientX, clientY) {
+      if (!loadedMesh) {
+        return false;
+      }
+
+      const focusedPoint = pickModelPoint(clientX, clientY, canvas, camera, loadedMesh, raycaster, pointer)
+        ?? pickTargetPlanePoint(camera, target, raycaster);
+      if (focusedPoint) {
+        target.copy(focusedPoint);
+        state.autoRotate = false;
+        frame?.classList.add("result-viewer__frame--focused");
+        return true;
+      }
+      return false;
     }
   } catch (error) {
     container.classList.add("result-viewer--error");
@@ -248,14 +320,45 @@ function setActiveButtons(buttons, value, dataKey) {
   });
 }
 
-function pickModelPoint(event, canvas, camera, mesh, raycaster, pointer) {
+function pickModelPoint(clientX, clientY, canvas, camera, mesh, raycaster, pointer) {
   const rect = canvas.getBoundingClientRect();
-  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
 
   const [hit] = raycaster.intersectObject(mesh, false);
   return hit?.point ?? null;
+}
+
+function pickTargetPlanePoint(camera, target, raycaster) {
+  const normal = camera.getWorldDirection(new THREE.Vector3());
+  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, target);
+  return raycaster.ray.intersectPlane(plane, new THREE.Vector3());
+}
+
+function getPointerDistance(pointers) {
+  const [first, second] = Array.from(pointers.values());
+  return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
+function getMoveDistance(pointer, clientX, clientY) {
+  return Math.hypot(clientX - pointer.startX, clientY - pointer.startY);
+}
+
+function safelySetPointerCapture(element, pointerId) {
+  try {
+    element.setPointerCapture(pointerId);
+  } catch {
+    // Synthetic pointer events used in tests do not always create capturable pointers.
+  }
+}
+
+function safelyReleasePointerCapture(element, pointerId) {
+  try {
+    element.releasePointerCapture(pointerId);
+  } catch {
+    // Ignore pointers that were never captured or were already released.
+  }
 }
 
 async function fetchText(url) {

@@ -12,7 +12,7 @@ This page highlights example outputs and validation images from the capture syst
 
 The captured images have been processed using RealityCapture 2.2 and are shown below.
 
-The viewer below shows a textured OBJ result generated from the capture system. Drag to orbit the model, scroll to zoom, and double-click the scan to focus the camera on that point.
+The viewer below shows a textured OBJ result generated from the capture system. Drag to orbit the model, scroll or pinch to zoom, and tap or double-click the scan to focus the camera on that point.
 
 <div class="result-viewer" data-result-viewer>
   <div class="result-viewer__toolbar">
